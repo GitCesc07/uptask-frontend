@@ -3,46 +3,59 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Menu, Transition } from "@headlessui/react";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Task } from "@/types/index"
+import { Task } from "@/types/index";
 import { deleteTask } from "@/api/TaskAPI";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { useDraggable } from "@dnd-kit/core";
 
 const MySwal = withReactContent(Swal);
 
 type TaskcardProps = {
-  task: Task
-  canEdit: boolean
-}
+  task: Task;
+  canEdit: boolean;
+};
 
 export default function Taskcard({ task, canEdit }: TaskcardProps) {
-
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
-  const params = useParams()
-  const projectId = params.projectId!
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: task._id,
+  });
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const params = useParams();
+  const projectId = params.projectId!;
 
   const { mutate } = useMutation({
     mutationFn: deleteTask,
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.message);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
-      toast.success(data)
-    }
-  })
+      toast.success(data);
+    },
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
 
   return (
     <li className="p-5 bg-white border border-slate-300 flex justify-between shadow-md shadow-slate-300/85">
-      <div className="min-w-0 flex flex-col gap-y-4">
+      <div
+        {...listeners}
+        {...attributes}
+        ref={setNodeRef}
+        style={style}
+        className="min-w-0 flex flex-col gap-y-4"
+      >
         <button
           className="text-lg font-bold text-slate-600 text-left"
           type="button"
-          onClick={() =>
-            navigate(location.pathname + `?viewTask=${task._id}`)
-          }
+          onClick={() => navigate(location.pathname + `?viewTask=${task._id}`)}
         >
           {task.name}
         </button>
@@ -77,54 +90,50 @@ export default function Taskcard({ task, canEdit }: TaskcardProps) {
                 </button>
               </Menu.Item>
 
-              {
-                canEdit &&
-                (
-                  <>
-                    <Menu.Item>
-                      <button
-                        type="button"
-                        className="block px-3 py-1 text-sm leading-6 text-gray-900"
-                        onClick={() =>
-                          navigate(location.pathname + `?editTask=${task._id}`)
-                        }
-                      >
-                        Editar Tarea
-                      </button>
-                    </Menu.Item>
+              {canEdit && (
+                <>
+                  <Menu.Item>
+                    <button
+                      type="button"
+                      className="block px-3 py-1 text-sm leading-6 text-gray-900"
+                      onClick={() =>
+                        navigate(location.pathname + `?editTask=${task._id}`)
+                      }
+                    >
+                      Editar Tarea
+                    </button>
+                  </Menu.Item>
 
-                    <Menu.Item>
-                      <button
-                        type="button"
-                        className="block px-3 py-1 text-sm leading-6 text-red-500"
-                        onClick={() => {
-                          MySwal.fire({
-                            title: "Eliminar tarea",
-                            html: `
+                  <Menu.Item>
+                    <button
+                      type="button"
+                      className="block px-3 py-1 text-sm leading-6 text-red-500"
+                      onClick={() => {
+                        MySwal.fire({
+                          title: "Eliminar tarea",
+                          html: `
                     <p class="text-lg text-gray-600 text-center">
                       ¿Seguro deseas eliminar la tarea <span class="font-bold text-gray-900">${task.name}</span>?
                     </p>
                   `,
-                            icon: "question",
-                            showCancelButton: true,
-                            cancelButtonColor: "#d33",
-                            cancelButtonText: "No, eliminar!",
-                            confirmButtonColor: "#3085d6",
-                            confirmButtonText: "Si, eliminarla!",
-                          }).then((result) => {
-                            if (result.isConfirmed) {
-                              mutate({ projectId, taskId: task._id });
-                            }
-                          });
-                        }}
-                      >
-                        Eliminar Tarea
-                      </button>
-                    </Menu.Item>
-                  </>
-                )
-              }
-
+                          icon: "question",
+                          showCancelButton: true,
+                          cancelButtonColor: "#d33",
+                          cancelButtonText: "No, eliminar!",
+                          confirmButtonColor: "#3085d6",
+                          confirmButtonText: "Si, eliminarla!",
+                        }).then((result) => {
+                          if (result.isConfirmed) {
+                            mutate({ projectId, taskId: task._id });
+                          }
+                        });
+                      }}
+                    >
+                      Eliminar Tarea
+                    </button>
+                  </Menu.Item>
+                </>
+              )}
             </Menu.Items>
           </Transition>
         </Menu>

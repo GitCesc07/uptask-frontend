@@ -1,39 +1,24 @@
 import { Fragment } from "react";
 import { Menu, Transition } from "@headlessui/react";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
-import { Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteProject, getProjects } from "@/api/ProjectAPI";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getProjects } from "@/api/ProjectAPI";
 import Loaders from "@/components/Loaders";
 import ProjectsEmpty from "@/components/ui-notfound/ProjectsEmpty";
-import { toast } from "react-toastify";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
 import { useAuth } from "@/hooks/useAuth";
 import { isManager } from "@/utils/policies";
-
-const MySwal = withReactContent(Swal);
+import DeleteProjectModal from "@/components/projects/DeleteProjectModal";
 
 export default function DashboardView() {
+  const navigate = useNavigate();
 
   const { data: dataAuth, isLoading: isLoadingAuth } = useAuth();
 
   const { data, isLoading } = useQuery({
     queryKey: ["projects"],
     queryFn: getProjects,
-  });
-
-  const queryClient = useQueryClient()
-  const { mutate } = useMutation({
-    mutationFn: deleteProject,
-    onError: (error) => {
-      toast.error(error.message)
-    },
-    onSuccess: (data) => {
-      toast.success(data)
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-    }
-  })
+  });  
 
   return (
     <>
@@ -161,28 +146,7 @@ export default function DashboardView() {
                                     <button
                                       type="button"
                                       className="block px-3 py-1 text-sm leading-6 text-red-500"
-                                      onClick={() => {
-                                        MySwal.fire({
-                                          title: "Eliminar proyecto",
-                                          html: `
-                                      <p class="text-lg text-gray-600 text-center">
-                                        ¿Seguro deseas eliminar el proyecto
-                                        <span class="font-bold text-gray-900">${project.projectName}</span>?
-                                      </p>
-                                    `,
-                                          text: "Si eliminas el proyecto no podras revertirlo",
-                                          icon: "warning",
-                                          showCancelButton: true,
-                                          cancelButtonColor: "#d33",
-                                          cancelButtonText: "No, eliminar!",
-                                          confirmButtonColor: "#3085d6",
-                                          confirmButtonText: "Si, eliminarlo!",
-                                        }).then((result) => {
-                                          if (result.isConfirmed) {
-                                            mutate(project._id);
-                                          }
-                                        });
-                                      }}
+                                      onClick={() => navigate(location.pathname + `?deleteProject=${project._id}`)}
                                     >
                                       Eliminar Proyecto
                                     </button>
@@ -203,6 +167,8 @@ export default function DashboardView() {
           </div>
         )}
       </div>
+
+      <DeleteProjectModal />
     </>
   );
 }
