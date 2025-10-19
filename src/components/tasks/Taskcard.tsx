@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Menu, Transition } from "@headlessui/react";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Task } from "@/types/index";
+import { TaskProject } from "@/types/index";
 import { deleteTask } from "@/api/TaskAPI";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -13,7 +13,7 @@ import { useDraggable } from "@dnd-kit/core";
 const MySwal = withReactContent(Swal);
 
 type TaskcardProps = {
-  task: Task;
+  task: TaskProject;
   canEdit: boolean;
 };
 
@@ -40,6 +40,12 @@ export default function Taskcard({ task, canEdit }: TaskcardProps) {
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        padding: "1.25rem",
+        backgroundColor: "#fff",
+        width: "300px",
+        display: "flex",
+        borderWidth: "1px",
+        borderColor: "rgb(203 213 225 / var(--tw-border-opacity))",
       }
     : undefined;
 
@@ -52,13 +58,9 @@ export default function Taskcard({ task, canEdit }: TaskcardProps) {
         style={style}
         className="min-w-0 flex flex-col gap-y-4"
       >
-        <button
-          className="text-lg font-bold text-slate-600 text-left"
-          type="button"
-          onClick={() => navigate(location.pathname + `?viewTask=${task._id}`)}
-        >
+        <p className="text-lg font-bold text-slate-600 text-left">
           {task.name}
-        </button>
+        </p>
         <p className="text-slate-500">{task.description}</p>
       </div>
 

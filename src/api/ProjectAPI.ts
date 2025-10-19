@@ -1,28 +1,33 @@
 import api from "@/lib/axios";
-import { Project, dashboardProjectSchema, ProjectFormData } from "@/types/index";
+import {
+  Project,
+  dashboardProjectSchema,
+  ProjectFormData,
+  editProjectSchema,
+  projectSchema,
+} from "@/types/index";
 import { isAxiosError } from "axios";
-
 
 // * Creando proyecto
 export async function createProject(formData: ProjectFormData) {
-   try {
-     const { data } = await api.post("/projects", formData)
-     return data
-   } catch (error) {
-    if(isAxiosError(error) && error.response) {
-       throw new Error(error.response.data.error)
-    }    
-   }
+  try {
+    const { data } = await api.post("/projects", formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
 }
 
 // * Obteniendo todos los proyectos
 export async function getProjects() {
   try {
-    const {data} = await api("/projects")
-    const response = dashboardProjectSchema.safeParse(data)
-    if(response.success) {
-      return response.data
-    }    
+    const { data } = await api("/projects");
+    const response = dashboardProjectSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);
@@ -34,7 +39,24 @@ export async function getProjects() {
 export async function getProjectById(id: Project["_id"]) {
   try {
     const { data } = await api(`/projects/${id}`);
-    return data
+    const response = editProjectSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}
+
+export async function getFullProjectDetails(id: Project["_id"]) {
+  try {
+    const { data } = await api(`/projects/${id}`);
+    const response = projectSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);
@@ -44,10 +66,10 @@ export async function getProjectById(id: Project["_id"]) {
 
 // * Editando proyecto
 type ProjectAPIType = {
-  formData: ProjectFormData,
-  projectId: Project["_id"]
-}
-export async function updateProject({formData, projectId} : ProjectAPIType) {
+  formData: ProjectFormData;
+  projectId: Project["_id"];
+};
+export async function updateProject({ formData, projectId }: ProjectAPIType) {
   try {
     const { data } = await api.put<string>(`/projects/${projectId}`, formData);
     return data;

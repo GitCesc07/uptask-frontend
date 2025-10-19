@@ -1,6 +1,6 @@
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getProjectById } from "@/api/ProjectAPI";
+import { getFullProjectDetails } from "@/api/ProjectAPI";
 import Loaders from "@/components/Loaders";
 import AddTaskModal from "@/components/tasks/AddModalTask";
 import TaskList from "@/components/tasks/TaskList";
@@ -11,29 +11,30 @@ import { isManager, isNotManager } from "@/utils/policies";
 import { useMemo } from "react";
 
 export default function ProjectDetailsView() {
-
   const { data: dataAuth, isLoading: isLoadingAuth } = useAuth();
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const params = useParams();
   const projectId = params.projectId!;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["project", projectId],
-    queryFn: () => getProjectById(projectId),
+    queryFn: () => getFullProjectDetails(projectId),
     retry: false,
   });
 
-  const canEdit = useMemo(() => data?.manager === dataAuth?._id, [data, dataAuth])
+  const canEdit = useMemo(
+    () => data?.manager === dataAuth?._id,
+    [data, dataAuth]
+  );
   if (isError) return <Navigate to="/404" />;
   if (data && dataAuth)
-
-
     return (
       <>
         <div
-          className={`${isLoading && "flex items-center justify-center h-screen w-full"
-            }`}
+          className={`${
+            isLoading && "flex items-center justify-center h-screen w-full"
+          }`}
         >
           {isLoading && isLoadingAuth ? (
             <Loaders />
@@ -46,8 +47,7 @@ export default function ProjectDetailsView() {
                 {data.description}
               </p>
 
-              {
-                isManager(data.manager, dataAuth!._id) &&
+              {isManager(data.manager, dataAuth!._id) && (
                 <nav className="my-5 fle gap-6 flex justify-between items-center md:flex-row flex-col">
                   <div className="flex md:flex-row flex-col items-center justify-center md:justify-start lg:justify-center gap-6 lg:gap-8 w-full lg:w-[50%]">
                     <button
@@ -108,31 +108,26 @@ export default function ProjectDetailsView() {
                       <path d="m9 18l-6-6l6-6l1.4 1.4L6.8 11H19V7h2v6H6.8l3.6 3.6z"></path>
                     </svg>
                   </Link>
-
                 </nav>
+              )}
 
-              }
-
-              {
-                isNotManager(data.manager, dataAuth!._id) &&
-                (
-                  <div className="flex items-center justify-end">
-                    <Link
-                      className="bg-gray-800 hover:bg-gray-900 py-2 px-4 text-white text-lg font-bold cursor-pointer transition-colors duration-200 rounded-md flex items-center gap-4 justify-center w-full md:w-80 lg:w-auto"
-                      to="/"
+              {isNotManager(data.manager, dataAuth!._id) && (
+                <div className="flex items-center justify-end">
+                  <Link
+                    className="bg-gray-800 hover:bg-gray-900 py-2 px-4 text-white text-lg font-bold cursor-pointer transition-colors duration-200 rounded-md flex items-center gap-4 justify-center w-full md:w-80 lg:w-auto"
+                    to="/"
+                  >
+                    Volver a proyectos
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      className="fill-white size-6"
                     >
-                      Volver a proyectos
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        className="fill-white size-6"
-                      >
-                        <path d="m9 18l-6-6l6-6l1.4 1.4L6.8 11H19V7h2v6H6.8l3.6 3.6z"></path>
-                      </svg>
-                    </Link>
-                  </div>
-                )
-              }
+                      <path d="m9 18l-6-6l6-6l1.4 1.4L6.8 11H19V7h2v6H6.8l3.6 3.6z"></path>
+                    </svg>
+                  </Link>
+                </div>
+              )}
 
               <TaskList tasks={data.tasks} canEdit={canEdit} />
               <AddTaskModal />
